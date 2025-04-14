@@ -14,6 +14,10 @@ class PembayaranController extends Controller
     {
         Log::info('Request data:', $request->all());
 
+        if (!$request->has('no_kontrol')) {
+            return view('admin.pembayaran.search');
+        }
+
         $request->validate([
             'no_kontrol' => 'required|exists:pelanggans,no_kontrol',
         ]);

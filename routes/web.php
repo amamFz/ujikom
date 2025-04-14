@@ -17,10 +17,10 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 
-// Route::middleware('web')->group(function () {
-//     Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
-//     Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
-// });
+Route::middleware('web')->group(function () {
+    Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
+    Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
+});
 
 
 Route::resource('pemakaian', PemakaianController::class);
