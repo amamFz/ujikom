@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PemakaianController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\UserController;
@@ -14,6 +15,13 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
+// Route::middleware('web')->group(function () {
+//     Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
+//     Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
+// });
+
 
 Route::resource('pemakaian', PemakaianController::class);
 Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
