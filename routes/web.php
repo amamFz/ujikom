@@ -15,10 +15,13 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::resource('pemakaian', PemakaianController::class);
+Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
+    ->name('pemakaian.report.pdf');
 Route::resource('pelanggan', PelangganController::class);
 Route::resource('users', UserController::class);
 Route::resource('tarif', TarifController::class);
-Route::resource('pemakaian', PemakaianController::class);
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -26,4 +29,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

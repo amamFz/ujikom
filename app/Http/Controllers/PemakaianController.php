@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
 use App\Models\pemakaian;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class PemakaianController extends Controller
@@ -44,6 +45,7 @@ class PemakaianController extends Controller
         $pelanggan = Pelanggan::with('tarif')
             ->where('no_kontrol', $validated['no_kontrol_id'])
             ->firstOrFail(); // This will automatically return 404 if not found
+        // dd($pelanggan->tarif);
 
         // Calculate usage (pemakaian)
         $jumlah_pakai = $request->meter_akhir - $request->meter_awal;
@@ -51,11 +53,11 @@ class PemakaianController extends Controller
             return redirect()->back()->withErrors(['meter_akhir' => 'Meter akhir harus lebih besar dari meter awal']);
         }
         // Set the biaya beban and biaya pemakaian
-        $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban;
+        $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban ?? 0;
         $biaya_pemakaian = $jumlah_pakai * $pelanggan->tarif->tarif_kwh;
 
         // Create new pemakaian record
-        Pemakaian::create([
+        pemakaian::create([
             'tahun' => $validated['tahun'],
             'bulan' => $validated['bulan'],
             'no_kontrol_id' => $pelanggan->no_kontrol,
@@ -114,7 +116,6 @@ class PemakaianController extends Controller
         // Calculate biaya
         $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban ?? 0;
         $biaya_pemakaian = $jumlah_pakai * $pelanggan->tarif->tarif_kwh;
-        dd($pelanggan->tarif);
         $pemakaian->update([
             'tahun' => $request->tahun,
             'bulan' => $request->bulan,
@@ -127,7 +128,8 @@ class PemakaianController extends Controller
         ]);
 
         return redirect()->route('pemakaian.index')
-            ->with('success', 'Data pemakaian berhasil diperbarui');}
+            ->with('success', 'Data pemakaian berhasil diperbarui');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -136,5 +138,21 @@ class PemakaianController extends Controller
     {
         $pemakaian->delete();
         return redirect()->route('pemakaian.index')->with('success', 'Data pemakaian berhasil dihapus');
+    }
+
+    public function pemakaianPdf($id)
+    {
+        // Ambil satu data pemakaian spesifik berdasarkan ID
+        $pemakaian = Pemakaian::with('pelanggan')->findOrFail($id);
+
+        // Buat collection dengan satu data saja
+        $pemakaians = collect([$pemakaian]);
+
+        $pdf = Pdf::loadView('admin.pemakaian.report', [
+            'pemakaians' => $pemakaians,
+            'single' => true // Tambah flag untuk menandai ini single data
+        ]);
+
+        return $pdf->stream("pemakaian-{$id}.pdf");
     }
 }

@@ -1,83 +1,135 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Pelanggan') }}
-        </h2>
-    </x-slot>
+  <x-slot name="header">
+    <h2 class="text-xl font-semibold leading-tight text-gray-800">
+      {{ __('Edit Data Pemakaian') }}
+    </h2>
+  </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form action="{{ route('pelanggan.update', $pelanggan->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        <div class="mb-4 w-full flex flex-col">
-                            <label for="no_kontrol" class="mb-2 text-gray-600">No Kontrol</label>
-                            <input type="text" name="no_kontrol" id="no_kontrol" class="rounded-md bg-gray-100"
-                                value="{{ $pelanggan->no_kontrol }}" readonly>
-                        </div>
-
-                        <div class="mb-4 w-full flex flex-col">
-                            <label for="name" class="mb-2 text-gray-600">Nama</label>
-                            <input type="text" name="name" id="name"
-                                class="rounded-md @error('name') border-red-500 @enderror"
-                                value="{{ old('name', $pelanggan->name) }}" required>
-                            @error('name')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4 w-full flex flex-col">
-                            <label for="alamat" class="mb-2 text-gray-600">Alamat</label>
-                            <textarea name="alamat" id="alamat" class="rounded-md @error('alamat') border-red-500 @enderror" rows="3">{{ old('alamat', $pelanggan->alamat) }}</textarea>
-                            @error('alamat')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4 w-full flex flex-col">
-                            <label for="telepon" class="mb-2 text-gray-600">Telepon</label>
-                            <input type="number" name="telepon" id="telepon"
-                                class="rounded-md @error('telepon') border-red-500 @enderror"
-                                value="{{ old('telepon', $pelanggan->telepon) }}" required min="10000000"
-                                max="999999999999999">
-                            @error('telepon')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4 w-full flex flex-col">
-                            <label for="jenis_plg_id" class="mb-2 text-gray-600">Jenis Pelanggan</label>
-                            <select name="jenis_plg_id" id="jenis_plg_id"
-                                class="rounded-md @error('jenis_plg_id') border-red-500 @enderror" required>
-                                <option value="">Pilih Jenis Pelanggan</option>
-                                @foreach ($tarifs as $tarif)
-                                    <option value="{{ $tarif->id }}"
-                                        {{ old('jenis_plg_id', $pelanggan->jenis_plg_id) == $tarif->id ? 'selected' : '' }}>
-                                        {{ $tarif->jenis_plg }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('jenis_plg_id')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <button type="submit"
-                                class="bg-blue-500 px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition-colors">
-                                Update
-                            </button>
-                            <a href="{{ route('pelanggan.index') }}"
-                                class="bg-gray-500 px-4 py-2 rounded-lg text-white hover:bg-gray-600 transition-colors">
-                                Batal
-                            </a>
-                        </div>
-                    </form>
-                </div>
+  <div class="py-12">
+    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+        <div class="p-6 text-gray-900">
+          <form action="{{ route('pemakaian.update', $pemakaian->id) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="mb-4 flex w-full flex-col">
+              <label for="tahun" class="mb-2 text-gray-600">Tahun</label>
+              <select name="tahun" id="tahun" class="@error('tahun') border-red-500 @enderror rounded-md"
+                required>
+                @for ($year = date('Y'); $year >= 2020; $year--)
+                  <option value="{{ $year }}" {{ old('tahun', $pemakaian->tahun) == $year ? 'selected' : '' }}>
+                    {{ $year }}
+                  </option>
+                @endfor
+              </select>
+              @error('tahun')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
             </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="bulan" class="mb-2 text-gray-600">Bulan</label>
+              <select name="bulan" id="bulan" class="@error('bulan') border-red-500 @enderror rounded-md"
+                required>
+                @foreach (range(1, 12) as $month)
+                  <option value="{{ $month }}" {{ old('bulan', $pemakaian->bulan) == $month ? 'selected' : '' }}>
+                    {{ date('F', mktime(0, 0, 0, $month, 1)) }}
+                  </option>
+                @endforeach
+              </select>
+              @error('bulan')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="no_kontrol_id" class="mb-2 text-gray-600">No Kontrol Pelanggan</label>
+              <select name="no_kontrol_id" id="no_kontrol_id"
+                class="@error('no_kontrol_id') border-red-500 @enderror rounded-md" required>
+                <option value="">Pilih No Kontrol</option>
+                @foreach ($pelanggans as $pelanggan)
+                  <option value="{{ $pelanggan->no_kontrol }}"
+                    {{ old('no_kontrol_id', $pemakaian->no_kontrol_id) == $pelanggan->no_kontrol ? 'selected' : '' }}>
+                    {{ $pelanggan->no_kontrol }} - {{ $pelanggan->name }}
+                  </option>
+                @endforeach
+              </select>
+              @error('no_kontrol_id')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="meter_awal" class="mb-2 text-gray-600">Meter Awal</label>
+              <input type="number" name="meter_awal" id="meter_awal"
+                class="@error('meter_awal') border-red-500 @enderror rounded-md"
+                value="{{ old('meter_awal', $pemakaian->meter_awal) }}" min="0" required
+                onchange="calculateTotal()" onkeyup="calculateTotal()">
+              @error('meter_awal')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="meter_akhir" class="mb-2 text-gray-600">Meter Akhir</label>
+              <input type="number" name="meter_akhir" id="meter_akhir"
+                class="@error('meter_akhir') border-red-500 @enderror rounded-md"
+                value="{{ old('meter_akhir', $pemakaian->meter_akhir) }}" min="0" required
+                onchange="calculateTotal()" onkeyup="calculateTotal()">
+              @error('meter_akhir')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="jumlah_pakai" class="mb-2 text-gray-600">Jumlah Pemakaian</label>
+              <input type="number" id="jumlah_pakai" name="jumlah_pakai" class="rounded-md bg-gray-100" readonly
+                value="{{ old('jumlah_pakai', $pemakaian->jumlah_pakai) }}">
+            </div>
+
+            <div class="mb-4 flex w-full flex-col">
+              <label for="biaya_beban_pemakai" class="mb-2 text-gray-600">Biaya Beban</label>
+              <input type="number" name="biaya_beban_pemakai" id="biaya_beban_pemakai"
+                class="@error('biaya_beban_pemakai') border-red-500 @enderror rounded-md"
+                value="{{ old('biaya_beban_pemakai', $pemakaian->biaya_beban_pemakai) }}" step="0.01" min="0"
+                required>
+              @error('biaya_beban_pemakai')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+              @enderror
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="submit"
+                class="rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600">
+                Update
+              </button>
+              <a href="{{ route('pemakaian.index') }}"
+                class="rounded-lg bg-gray-500 px-4 py-2 text-white transition-colors hover:bg-gray-600">
+                Batal
+              </a>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
+  </div>
+  @push('scripts')
+    <script>
+      function calculateTotal() {
+        const meterAwal = parseFloat(document.getElementById('meter_awal').value) || 0;
+        const meterAkhir = parseFloat(document.getElementById('meter_akhir').value) || 0;
+
+        if (meterAkhir >= meterAwal) {
+          const total = meterAkhir - meterAwal;
+          document.getElementById('jumlah_pakai').value = total;
+        } else {
+          document.getElementById('jumlah_pakai').value = '';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        calculateTotal();
+      });
+    </script>
+  @endpush
 </x-app-layout>
