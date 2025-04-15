@@ -8,9 +8,7 @@ use App\Http\Controllers\TarifController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [PembayaranController::class, 'index'])->name('public.history');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -20,6 +18,10 @@ Route::get('/dashboard', function () {
 Route::middleware('web')->group(function () {
     Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
     Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
+    Route::get('/pembayaran/{pemakaian}/receipt', [PembayaranController::class, 'generateReceipt'])
+    ->name('pembayaran.receipt');
+    Route::get('/pembayaran/history/search', [PembayaranController::class, 'searchHistory'])
+    ->name('pembayaran.search.history');
 });
 
 

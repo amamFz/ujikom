@@ -63,6 +63,8 @@
         <th>Jumlah Pakai</th>
         <th>Biaya Beban</th>
         <th>Biaya Pemakaian</th>
+        <th>Total Bayar</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
@@ -76,6 +78,14 @@
           <td>{{ $pemakaian->jumlah_pakai }}</td>
           <td>Rp {{ number_format($pemakaian->biaya_beban_pemakai, 0, ',', '.') }}</td>
           <td>Rp {{ number_format($pemakaian->biaya_pemakaian, 0, ',', '.') }}</td>
+          <td>Rp {{ number_format($pemakaian->total_bayar, 0, ',', '.') }}</td>
+          <td>
+            @if ($pemakaian->status == '1')
+              <span style="color: green;">Dibayar</span>
+            @else
+              <span style="color: red;">Belum Bayar</span>
+            @endif
+          </td>
         </tr>
       @endforeach
     </tbody>

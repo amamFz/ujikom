@@ -21,6 +21,8 @@ return new class extends Migration
             $table->integer('jumlah_pakai');
             $table->decimal('biaya_beban_pemakai', 10, 2);
             $table->decimal('biaya_pemakaian',10,2);
+            $table->decimal('total_bayar',10,2)->storedAs('biaya_beban_pemakai + biaya_pemakaian');
+            $table->boolean('is_status')->default(false);
             $table->timestamps();
 
             $table->foreign('no_kontrol_id')

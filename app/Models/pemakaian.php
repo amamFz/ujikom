@@ -16,6 +16,8 @@ class Pemakaian extends Model
         'jumlah_pakai',
         'biaya_beban_pemakai',
         'biaya_pemakaian',
+        'total_bayar',
+        'is_status',
     ];
 
     protected $casts = [
@@ -26,6 +28,8 @@ class Pemakaian extends Model
         'jumlah_pakai' => 'integer',
         'biaya_beban_pemakai' => 'decimal:2',
         'biaya_pemakaian' => 'decimal:2',
+        'total_bayar' => 'decimal:2',
+        'is_status' => 'boolean',
     ];
 
     public function pelanggan(): BelongsTo

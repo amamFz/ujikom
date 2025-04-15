@@ -77,6 +77,21 @@
                 </p>
               </div>
             </div>
+            <div class="space-y-6">
+              <div class="rounded-lg bg-gray-50 p-4">
+                <label class="block text-sm font-semibold text-gray-600">Total Pembayaran</label>
+                <p class="mt-1 text-lg font-medium text-gray-800">
+                  Rp {{ number_format($pemakaian->total_bayar, 2, ',', '.') }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-gray-50 p-4">
+                <label class="block text-sm font-semibold text-gray-600">Status</label>
+                <p class="mt-1 text-lg font-medium text-gray-800">
+                    {{ $pemakaian->is_status == 1 ? 'Dibayar' : 'Belum Dibayar' }}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div class="mt-8 flex items-center gap-2">

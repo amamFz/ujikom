@@ -103,6 +103,7 @@ class PemakaianController extends Controller
             'no_kontrol_id' => 'required|exists:pelanggans,no_kontrol',
             'meter_awal' => 'required|integer|min:0',
             'meter_akhir' => 'required|integer|gte:meter_awal',
+            'is_status' => 'required|boolean',
         ]);
 
         // Find pelanggan with tarif
@@ -116,6 +117,7 @@ class PemakaianController extends Controller
         // Calculate biaya
         $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban ?? 0;
         $biaya_pemakaian = $jumlah_pakai * $pelanggan->tarif->tarif_kwh;
+
         $pemakaian->update([
             'tahun' => $request->tahun,
             'bulan' => $request->bulan,
@@ -124,7 +126,8 @@ class PemakaianController extends Controller
             'meter_akhir' => $request->meter_akhir,
             'jumlah_pakai' => $jumlah_pakai,
             'biaya_beban_pemakai' => $biaya_beban_pemakai,
-            'biaya_pemakaian' => $biaya_pemakaian
+            'biaya_pemakaian' => $biaya_pemakaian,
+            'is_status' => $request->is_status
         ]);
 
         return redirect()->route('pemakaian.index')
