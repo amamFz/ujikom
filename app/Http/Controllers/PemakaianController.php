@@ -12,6 +12,7 @@ class PemakaianController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // fungsi ini digunakan untuk menampilkan semua data pemakaian
     public function index()
     {
         $pemakaians = pemakaian::with('pelanggan')->get();
@@ -21,6 +22,8 @@ class PemakaianController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+
+    // fungsi ini digunakan untuk menampilkan form tambah pemakaian
     public function create()
     {
         $pelanggans = Pelanggan::all();
@@ -30,6 +33,8 @@ class PemakaianController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+    //  fungsi ini digunakan untuk menyimpan data pemakaian baru
     public function store(Request $request)
     {
         // Validasi input
@@ -76,6 +81,8 @@ class PemakaianController extends Controller
     /**
      * Display the specified resource.
      */
+
+    //  fungsi ini digunakan untuk menampilkan detail pemakaian
     public function show(pemakaian $pemakaian)
     {
         $pemakaian->load('pelanggan');
@@ -85,6 +92,8 @@ class PemakaianController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+
+    //  fungsi ini digunakan untuk menampilkan form edit pemakaian
     public function edit(pemakaian $pemakaian)
     {
         $pelanggans = Pelanggan::all();
@@ -95,6 +104,8 @@ class PemakaianController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
+    //  fungsi ini digunakan untuk memperbarui data pemakaian
     public function update(Request $request, pemakaian $pemakaian)
     {
         $request->validate([
@@ -137,12 +148,17 @@ class PemakaianController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
+    //  fungsi ini digunakan untuk menghapus data pemakaian
     public function destroy(pemakaian $pemakaian)
     {
         $pemakaian->delete();
         return redirect()->route('pemakaian.index')->with('success', 'Data pemakaian berhasil dihapus');
     }
 
+    /**
+     * Generate PDF for pemakaian
+     */
     public function pemakaianPdf($id)
     {
         // Ambil satu data pemakaian spesifik berdasarkan ID

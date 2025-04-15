@@ -7,17 +7,20 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    // fungsi ini digunakan untuk menampilkan halaman utama
     public function index()
     {
         $users = User::all();
         return view('admin.petugasLoket.index', compact('users'));
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman tambah petugas
     public function create()
     {
         return view('admin.petugasLoket.create');
     }
 
+    // fungsi ini digunakan untuk menyimpan data petugas baru
     public function store(Request $request)
     {
         $request->validate([
@@ -34,18 +37,21 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan');
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman edit petugas
     public function show(User $user)
     {
         $users = User::all();
         return view('admin.petugasLoket.show', compact('user'));
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman edit petugas
     public function edit(User $user)
     {
         $users = User::all();
         return view('admin.petugasLoket.edit', compact('user'));
     }
 
+    // fungsi ini digunakan untuk memperbarui data petugas
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -66,6 +72,7 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui');
     }
 
+    // fungsi ini digunakan untuk menghapus data petugas
     public function destroy(User $user)
     {
         $user->delete();

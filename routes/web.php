@@ -10,33 +10,42 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PembayaranController::class, 'index'])->name('public.history');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
-
-Route::middleware('web')->group(function () {
-    Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
-    Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
-    Route::get('/pembayaran/{pemakaian}/receipt', [PembayaranController::class, 'generateReceipt'])
-    ->name('pembayaran.receipt');
-    Route::get('/pembayaran/history/search', [PembayaranController::class, 'searchHistory'])
-    ->name('pembayaran.search.history');
-});
-
-
-Route::resource('pemakaian', PemakaianController::class);
-Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
-    ->name('pemakaian.report.pdf');
-Route::resource('pelanggan', PelangganController::class);
-Route::resource('users', UserController::class);
-Route::resource('tarif', TarifController::class);
+// Route::resource('pemakaian', PemakaianController::class);
+// Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
+//     ->name('pemakaian.report.pdf');
+// Route::resource('users', UserController::class);
+// Route::resource('tarif', TarifController::class);
 
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::resource('pelanggan', PelangganController::class);
+
+    Route::middleware('web')->group(function () {
+        Route::get('/pembayaran/search', [PembayaranController::class, 'search'])->name('pembayaran.search');
+        Route::post('/pembayaran/entry', [PembayaranController::class, 'entry'])->name('pembayaran.entry');
+        Route::get('/pembayaran/{pemakaian}/receipt', [PembayaranController::class, 'generateReceipt'])
+            ->name('pembayaran.receipt');
+        Route::get('/pembayaran/history/search', [PembayaranController::class, 'searchHistory'])
+            ->name('pembayaran.search.history');
+    });
+
+    Route::middleware('role:admin')->group(function () {
+        // Full access to all resources
+        Route::resource('pemakaian', PemakaianController::class);
+        Route::resource('users', UserController::class);
+        Route::resource('tarif', TarifController::class);
+
+        Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
+            ->name('pemakaian.report.pdf');
+    });
 });
 
 require __DIR__ . '/auth.php';

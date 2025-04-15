@@ -11,26 +11,32 @@ use Illuminate\Support\Facades\Log;
 class PembayaranController extends Controller
 {
 
+    // fungsi ini digunakan untuk menampilkan halaman utama
     public function index(Request $request)
-{
-    if ($request->has('no_kontrol')) {
-        $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
+    {
+        if ($request->has('no_kontrol')) {
+            $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
 
-        if ($pelanggan) {
-            $pemakaians = Pemakaian::where('no_kontrol_id', $pelanggan->no_kontrol)
-                ->orderBy('tahun', 'desc')
-                ->orderBy('bulan', 'desc')
-                ->get();
+            if ($pelanggan) {
+                $pemakaians = Pemakaian::where('no_kontrol_id', $pelanggan->no_kontrol)
+                    ->orderBy('tahun', 'desc')
+                    ->orderBy('bulan', 'desc')
+                    ->get();
 
-            return view('home', compact('pelanggan', 'pemakaians'));
+                return view('home', compact('pelanggan', 'pemakaians'));
+            }
+
+            if (!$pelanggan) {
+                return back()->with('error', 'Nomor kontrol tidak ditemukan');
+            }
+
+            return back()->with('error', 'Nomor kontrol tidak ditemukan');
         }
 
-        return back()->with('error', 'Nomor kontrol tidak ditemukan');
+        return view('home');
     }
 
-    return view('home');
-}
-
+    // fungsi ini digunakan untuk menampilkan halaman pencarian
     public function searchHistory(Request $request)
     {
         if (!$request->has('no_kontrol')) {
@@ -50,6 +56,7 @@ class PembayaranController extends Controller
         return view('admin.pembayaran.history', compact('pelanggan', 'pemakaians'));
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman pencarian
     public function search(Request $request)
     {
         Log::info('Request data:', $request->all());
@@ -71,6 +78,7 @@ class PembayaranController extends Controller
         return view('admin.pembayaran.entry', compact('pelanggan', 'pemakaian'));
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman entry pembayaran
     public function entry(Request $request)
     {
         $request->validate([
@@ -94,6 +102,7 @@ class PembayaranController extends Controller
         return redirect()->route('pembayaran.receipt', $pemakaian->id);
     }
 
+    // fungsi ini digunakan untuk menampilkan halaman entry pembayaran
     public function generateReceipt(Pemakaian $pemakaian)
     {
         $pelanggan = $pemakaian->pelanggan;

@@ -10,6 +10,7 @@ class TarifController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // fungsi ini digunakan untuk menampilkan semua data tarif
     public function index()
     {
         $tarifs = Tarif::all();
@@ -19,6 +20,7 @@ class TarifController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+    // fungsi ini digunakan untuk menampilkan form tambah tarif
     public function create()
     {
         return view("admin.tarif.create");
@@ -27,6 +29,7 @@ class TarifController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // fungsi ini digunakan untuk menyimpan data tarif baru
     public function store(Request $request)
     {
         $request->validate([
@@ -47,6 +50,7 @@ class TarifController extends Controller
     /**
      * Display the specified resource.
      */
+    // fungsi ini digunakan untuk menampilkan detail tarif
     public function show(Tarif $tarif)
     {
         $tarifs = Tarif::all();
@@ -56,6 +60,7 @@ class TarifController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+    // fungsi ini digunakan untuk menampilkan form edit tarif
     public function edit(Tarif $tarif)
     {
         $tarifs = Tarif::all();
@@ -65,6 +70,7 @@ class TarifController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // fungsi ini digunakan untuk memperbarui data tarif
     public function update(Request $request, Tarif $tarif)
     {
         $request->validate([
@@ -85,6 +91,7 @@ class TarifController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    // fungsi ini digunakan untuk menghapus data tarif
     public function destroy(Tarif $tarif)
     {
         $tarif->delete();

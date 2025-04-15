@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pemakaian extends Model
 {
+    // Model ini digunakan untuk mengelola data pemakaian
     protected $fillable = [
         'tahun',
         'bulan',
@@ -20,6 +21,7 @@ class Pemakaian extends Model
         'is_status',
     ];
 
+    // Model ini untuk mengelola relasi ke tabel pelanggan
     protected $casts = [
         'tahun' => 'integer',
         'bulan' => 'integer',
@@ -32,6 +34,7 @@ class Pemakaian extends Model
         'is_status' => 'boolean',
     ];
 
+    // Model ini digunakan untuk mengelola relasi ke tabel pelanggan
     public function pelanggan(): BelongsTo
     {
         return $this->belongsTo(Pelanggan::class, 'no_kontrol_id', 'no_kontrol');

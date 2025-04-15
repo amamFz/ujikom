@@ -11,6 +11,7 @@ class PelangganController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // fungsi ini digunakan untuk menampilkan semua data pelanggan
     public function index()
     {
         $pelanggans = Pelanggan::with('tarif')->get();
@@ -20,6 +21,8 @@ class PelangganController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+
+    //  fungsi ini digunakan untuk menampilkan form tambah pelanggan
     public function create()
     {
         $no_kontrol = Pelanggan::generateUniqueNoKontrol();
@@ -30,6 +33,8 @@ class PelangganController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+    //  fungsi ini digunakan untuk menyimpan data pelanggan baru
     public function store(Request $request)
     {
         $request->validate([
@@ -49,6 +54,8 @@ class PelangganController extends Controller
     /**
      * Display the specified resource.
      */
+
+    //  fungsi ini digunakan untuk menampilkan detail pelanggan
     public function show(Pelanggan $pelanggan)
     {
         $pelanggan->load('tarif');
@@ -58,6 +65,8 @@ class PelangganController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+
+    //  fungsi ini digunakan untuk menampilkan form edit pelanggan
     public function edit(Pelanggan $pelanggan)
     {
         // $pelanggans = Pelanggan::all();
@@ -68,6 +77,8 @@ class PelangganController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
+    //  fungsi ini digunakan untuk memperbarui data pelanggan
     public function update(Request $request, Pelanggan $pelanggan)
     {
         $request->validate([
@@ -85,6 +96,8 @@ class PelangganController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
+    //  fungsi ini digunakan untuk menghapus data pelanggan
     public function destroy(Pelanggan $pelanggan)
     {
         $pelanggan->delete();

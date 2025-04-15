@@ -25,7 +25,7 @@
                                 Nomor Kontrol
                             </label>
                             <input type="text" name="no_kontrol" id="no_kontrol"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                class="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Masukkan nomor kontrol Anda"
                                 value="{{ old('no_kontrol', request('no_kontrol')) }}" required>
                         </div>
@@ -103,7 +103,43 @@
                     </div>
                 </div>
             </div>
+
         @endif
+
+        {{-- @if (isset($pelanggan))
+            <div class="container mx-auto px-6 py-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    @if ($pelanggan)
+                        <div class="border-b border-gray-200 pb-4 mb-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Informasi Pelanggan</h2>
+                            <p class="text-gray-600">Nomor Kontrol: {{ $pelanggan->no_kontrol }}</p>
+                            <p class="text-gray-600">Nama: {{ $pelanggan->name }}</p>
+                            <p class="text-gray-600">Alamat: {{ $pelanggan->alamat }}</p>
+                        </div>
+
+                        <!-- ...existing payment history table... -->
+                    @else
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-medium text-gray-900 mb-2">Data Tidak Ditemukan</h3>
+                            <p class="text-gray-500 mb-6">
+                                Nomor kontrol "{{ request('no_kontrol') }}" tidak terdaftar dalam sistem.
+                            </p>
+                            <a href="{{ url('/') }}"
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Coba Lagi
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif --}}
 
         <!-- Footer -->
         <footer class="bg-white border-t">

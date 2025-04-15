@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pelanggan extends Model
 {
+    // Model ini digunakan untuk mengelola data pelanggan
     protected $fillable = [
         'no_kontrol',
         'name',
@@ -14,13 +15,14 @@ class Pelanggan extends Model
         'jenis_plg_id'
     ];
 
+    // Model ini digunakan untuk mengelola relasi ke tabel tarif
     public function tarif()
     {
         return $this->belongsTo(Tarif::class, 'jenis_plg_id');
     }
 
 
-
+    // fungsi ini digunakan untuk menggenerate nomor kontrol yang unik
     public static function generateUniqueNoKontrol()
     {
         $prefix = 'NOPLG';
