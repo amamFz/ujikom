@@ -12,11 +12,17 @@
                     <form action="{{ route('tarif.store') }}" method="POST">
                         @csrf
                         <div class="mb-4 w-full flex flex-col">
-                            <label for="jenis_plg" class="mb-2 text-gray-600">Jenis Pelanggan</label>
-                            <input type="text" name="jenis_plg" id="jenis_plg"
-                                class="rounded-md @error('jenis_plg') border-red-500 @enderror"
-                                value="{{ old('jenis_plg') }}" required>
-                            @error('jenis_plg')
+                            <label for="jenis_plg_id" class="mb-2 text-gray-600">Jenis Pelanggan</label>
+                            <select name="jenis_plg_id" id="jenis_plg_id"
+                                class="rounded-md @error('jenis_plg_id') border-red-500 @enderror">
+                                <option value="">Pilih Jenis Pelanggan</option>
+                                @foreach ($jenis_pelanggans as $jenis)
+                                    <option value="{{ $jenis->id }}"
+                                        {{ old('jenis_plg_id') == $jenis->id ? 'selected' : '' }}>
+                                        {{ $jenis->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('jenis_plg_id')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -26,7 +32,6 @@
                             <input type="number" name="biaya_beban" id="biaya_beban" step="0.01"
                                 class="rounded-md @error('biaya_beban') border-red-500 @enderror"
                                 value="{{ old('biaya_beban') }}" required>
-
                             @error('biaya_beban')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror

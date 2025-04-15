@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\JenisPelangganController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PemakaianController;
 use App\Http\Controllers\PembayaranController;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('pemakaian', PemakaianController::class);
         Route::resource('users', UserController::class);
         Route::resource('tarif', TarifController::class);
+        Route::resource('jenis_pelanggan', JenisPelangganController::class);
 
         Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
             ->name('pemakaian.report.pdf');

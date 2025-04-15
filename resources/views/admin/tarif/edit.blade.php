@@ -14,13 +14,22 @@
                         @csrf
                         @method('PUT')
                         <div class="mb-4 w-full flex flex-col">
-                            <label for="jenis_plg" class="mb-2 text-gray-600">Jenis Pelanggan</label>
-                            <input type="text" name="jenis_plg" id="jenis_plg"
+                            <label for="jenis_plg_id" class="mb-2 text-gray-600">Jenis Pelanggan</label>
+                            {{-- <input type="text" name="jenis_plg" id="jenis_plg"
                                 class="rounded-md @error('jenis_plg') border-red-500 @enderror"
-                                value="{{ $tarif->jenis_plg }}" required>
+                                value="{{ $tarif->jenis_pelanggan->name }}" required>
                             @error('jenis_plg')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
+                            @enderror --}}
+                            <select name="jenis_plg_id" class="rounded-md @error('jenis_plg') border-red-500 @enderror"
+                                value="{{ $tarif->jenis_pelanggan->id }}">
+                                <option value="">Pilih Jenis Pelanggan</option>
+                                @foreach ($jenis_pelanggans as $jenis)
+                                    <option value="{{ $jenis->id }}"
+                                        {{ $tarif->jenis_pelanggan->id == $jenis->id ? 'selected' : '' }}>
+                                        {{ $jenis->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="mb-4 w-full flex flex-col">
