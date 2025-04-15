@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JenisPelanggan;
 use App\Models\Tarif;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class TarifController extends Controller
     // fungsi ini digunakan untuk menampilkan semua data tarif
     public function index()
     {
-        $tarifs = Tarif::all();
+        $tarifs = Tarif::with('jenis_pelanggan')->get();
         return view("admin.tarif.index", compact("tarifs"));
     }
 
@@ -23,7 +24,8 @@ class TarifController extends Controller
     // fungsi ini digunakan untuk menampilkan form tambah tarif
     public function create()
     {
-        return view("admin.tarif.create");
+        $jenis_pelanggans = JenisPelanggan::all();
+        return view("admin.tarif.create", compact("jenis_pelanggans"));
     }
 
     /**
@@ -33,15 +35,15 @@ class TarifController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_plg' => 'required|unique:tarifs,jenis_plg',
+            'jenis_plg_id' => 'required|exists:jenis_pelanggans,id',
             'biaya_beban' => 'required|numeric|between:0,999999.99',
             'tarif_kwh' => 'required|numeric|between:0,999999.99',
         ]);
 
         // Convert to 2 decimal places
         $data = $request->all();
-        $data['biaya_beban'] = number_format((float)$data['biaya_beban'], 2, '.', '');
-        $data['tarif_kwh'] = number_format((float)$data['tarif_kwh'], 2, '.', '');
+        $data['biaya_beban'] = number_format((float) $data['biaya_beban'], 2, '.', '');
+        $data['tarif_kwh'] = number_format((float) $data['tarif_kwh'], 2, '.', '');
 
         Tarif::create($data);
         return redirect()->route('tarif.index')->with('success', 'Tarif berhasil ditambahkan');
@@ -53,7 +55,7 @@ class TarifController extends Controller
     // fungsi ini digunakan untuk menampilkan detail tarif
     public function show(Tarif $tarif)
     {
-        $tarifs = Tarif::all();
+        $tarif->load('jenis_pelanggan');
         return view("admin.tarif.show", compact("tarif"));
     }
 
@@ -63,8 +65,8 @@ class TarifController extends Controller
     // fungsi ini digunakan untuk menampilkan form edit tarif
     public function edit(Tarif $tarif)
     {
-        $tarifs = Tarif::all();
-        return view("admin.tarif.edit", compact("tarif"));
+        $jenis_pelanggans = JenisPelanggan::all();
+        return view("admin.tarif.edit", compact("tarif", "jenis_pelanggans"));
     }
 
     /**
@@ -74,15 +76,15 @@ class TarifController extends Controller
     public function update(Request $request, Tarif $tarif)
     {
         $request->validate([
-            'jenis_plg' => 'required|unique:tarifs,jenis_plg,' . $tarif->id,
+            'jenis_plg_id' => 'required|exists:jenis_pelanggans,id',
             'biaya_beban' => 'required|numeric|between:0,999999.99',
             'tarif_kwh' => 'required|numeric|between:0,999999.99',
         ]);
 
         // Convert to 2 decimal places
         $data = $request->all();
-        $data['biaya_beban'] = number_format((float)$data['biaya_beban'], 2, '.', '');
-        $data['tarif_kwh'] = number_format((float)$data['tarif_kwh'], 2, '.', '');
+        $data['biaya_beban'] = number_format((float) $data['biaya_beban'], 2, '.', '');
+        $data['tarif_kwh'] = number_format((float) $data['tarif_kwh'], 2, '.', '');
 
         $tarif->update($data);
         return redirect()->route('tarif.index')->with('success', 'Tarif berhasil diperbarui');

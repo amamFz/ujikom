@@ -8,7 +8,7 @@ class Tarif extends Model
 {
     // Model ini digunakan untuk mengelola data tarif
     protected $fillable = [
-        "jenis_plg",
+        "jenis_plg_id",
         "biaya_beban",
         "tarif_kwh",
     ];
@@ -18,4 +18,14 @@ class Tarif extends Model
     {
         return $this->hasMany(Pelanggan::class, 'jenis_plg_id');
     }
+
+    public function jenis_pelanggan()
+    {
+        return $this->belongsTo(JenisPelanggan::class, 'jenis_plg_id');
+    }
+
+    // public function jenis_plg()
+    // {
+    //     return $this->hasMany(Pelanggan::class);
+    // }
 }

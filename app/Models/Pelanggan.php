@@ -21,6 +21,12 @@ class Pelanggan extends Model
         return $this->belongsTo(Tarif::class, 'jenis_plg_id');
     }
 
+    public function jenis_pelanggan()
+    {
+        return $this->belongsTo(JenisPelanggan::class, 'jenis_plg_id');
+    }
+
+
 
     // fungsi ini digunakan untuk menggenerate nomor kontrol yang unik
     public static function generateUniqueNoKontrol()

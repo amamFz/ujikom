@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tarifs', function (Blueprint $table) {
+        Schema::create('jenis_pelanggans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('jenis_plg_id')->constrained('jenis_pelanggans')->onDelete('cascade');
-            $table->decimal('biaya_beban');
-            $table->decimal('tarif_kwh');
+            $table->string('name');
             $table->timestamps();
         });
     }
@@ -25,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tarifs');
+        Schema::dropIfExists('jenis_pelanggans');
     }
 };

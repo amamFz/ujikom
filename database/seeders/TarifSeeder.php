@@ -15,17 +15,17 @@ class TarifSeeder extends Seeder
     {
         $tarifs = [
             [
-                'jenis_plg' => 'Rumah Tangga',
+                'jenis_plg_id' => 1,
                 'biaya_beban' => 20000,
                 'tarif_kwh' => 1352.00,
             ],
             [
-                'jenis_plg' => 'Bisnis',
+                'jenis_plg_id' => 2,
                 'biaya_beban' => 30000,
                 'tarif_kwh' => 1467.28,
             ],
             [
-                'jenis_plg' => 'Industri',
+                'jenis_plg_id' => 3,
                 'biaya_beban' => 50000,
                 'tarif_kwh' => 1699.53,
             ],

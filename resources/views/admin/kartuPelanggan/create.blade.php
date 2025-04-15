@@ -47,13 +47,14 @@
 
                         <div class="mb-4 w-full flex flex-col">
                             <label for="jenis_plg_id" class="mb-2 text-gray-600">Jenis Pelanggan</label>
-                            <select name="jenis_plg_id" id="jenis_plg_id"
-                                class="rounded-md @error('jenis_plg_id') border-red-500 @enderror" required>
+
+                            <select name="jenis_plg_id" id="jenis_plg_id" class="form-control"
+                                class="rounded-md @error('jenis_plg_id') border-red-500 @enderror">
                                 <option value="">Pilih Jenis Pelanggan</option>
-                                @foreach ($tarifs as $tarif)
-                                    <option value="{{ $tarif->id }}"
-                                        {{ old('jenis_plg_id') == $tarif->id ? 'selected' : '' }}>
-                                        {{ $tarif->jenis_plg }}
+                                @foreach ($jenis_pelanggans as $jenis)
+                                    <option value="{{ $jenis->id }}"
+                                        {{ old('jenis_plg_id', $pelanggan->jenis_plg_id ?? '') == $jenis->id ? 'selected' : '' }}>
+                                        {{ $jenis->name }}
                                     </option>
                                 @endforeach
                             </select>

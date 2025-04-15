@@ -38,6 +38,11 @@
                         </x-nav-link>
                     </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                        <x-nav-link :href="route('jenis_pelanggan.index')" :active="request()->routeIs('jenis_pelanggan.index')">
+                            {{ __('Jenis Pelanggan') }}
+                        </x-nav-link>
+                    </div>
+                    <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pembayaran.search')" :active="request()->routeIs('pembayaran.search')">
                             {{ __('Entry Pemabayaran') }}
                         </x-nav-link>

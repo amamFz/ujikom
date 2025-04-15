@@ -79,7 +79,7 @@
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm">
                                         <p class="text-sm font-normal text-gray-600">
-                                            {{ $pelanggan->tarif->jenis_plg }}</p>
+                                            {{ $pelanggan->tarif->jenis_pelanggan->name }}</p>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-sm">
                                         <a

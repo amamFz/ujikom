@@ -17,7 +17,7 @@
                             <label for="jenis_plg" class="mb-2 text-gray-600">Jenis Pelanggan</label>
                             <input type="text" name="jenis_plg" id="jenis_plg"
                                 class="rounded-md @error('jenis_plg') border-red-500 @enderror"
-                                value="{{ $tarif->jenis_plg }}" required readonly disabled>
+                                value="{{ $tarif->jenis_pelanggan->name }}" required readonly disabled>
                             @error('jenis_plg')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
