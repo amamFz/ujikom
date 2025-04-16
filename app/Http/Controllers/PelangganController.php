@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
 use App\Models\JenisPelanggan;
+use App\Models\Tarif;
 use Illuminate\Http\Request;
 
 class PelangganController extends Controller
@@ -25,8 +26,9 @@ class PelangganController extends Controller
     {
         $no_kontrol = Pelanggan::generateUniqueNoKontrol();
         // Get all jenis_pelanggan
-        $jenis_pelanggans = JenisPelanggan::all();
-        return view('admin.kartuPelanggan.create', compact('no_kontrol', 'jenis_pelanggans'));
+        // $jenis_pelanggans = JenisPelanggan::all();
+        $tarifs = Tarif::all();
+        return view('admin.kartuPelanggan.create', compact('no_kontrol', 'tarifs'));
     }
 
     /**
@@ -38,7 +40,7 @@ class PelangganController extends Controller
             'name' => 'required|min:2|max:255',
             'alamat' => 'nullable|min:2|max:512',
             'telepon' => 'required|digits_between:8,16',
-            'jenis_plg_id' => 'required|exists:jenis_pelanggans,id', // Corrected to check jenis_pelanggans table
+            'jenis_plg_id' => 'required|exists:tarifs,id', // Corrected to check tarifs table
         ]);
 
         $data = $request->all();
@@ -63,8 +65,9 @@ class PelangganController extends Controller
      */
     public function edit(Pelanggan $pelanggan)
     {
-        $jenis_pelanggans = JenisPelanggan::all();
-        return view('admin.kartuPelanggan.edit', compact('pelanggan', 'jenis_pelanggans'));
+        // $jenis_pelanggans = JenisPelanggan::all();\
+        $tarifs = Tarif::all();
+        return view('admin.kartuPelanggan.edit', compact('pelanggan', 'tarifs'));
     }
 
     /**
@@ -72,11 +75,12 @@ class PelangganController extends Controller
      */
     public function update(Request $request, Pelanggan $pelanggan)
     {
+        // dd($request->jenis_plg_id);
         $request->validate([
             'name' => 'required|min:2|max:255',
             'alamat' => 'nullable|min:2|max:512',
             'telepon' => 'required|digits_between:8,16',
-            'jenis_plg_id' => 'required|exists:jenis_pelanggans,id', // Corrected to check jenis_pelanggans table
+            'jenis_plg_id' => 'required|exists:tarifs,id', // Corrected to check tarifs table
         ]);
 
         $data = $request->except(['no_kontrol', '_token', '_method']);
