@@ -21,7 +21,12 @@ Route::get('/', [PembayaranController::class, 'index'])->name('public.history');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $totalUsers = \App\Models\User::count();
+        $totalPelanggan = \App\Models\Pelanggan::count();
+        $totalPemakaian = \App\Models\Pemakaian::sum('jumlah_pakai');
+        $aktivitas = \App\Models\Pelanggan::latest()->take(5)->get();
+
+        return view('dashboard', compact('totalUsers', 'totalPelanggan', 'totalPemakaian', 'aktivitas'));
     })->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
