@@ -12,10 +12,30 @@ class PelangganController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Load pelanggan with its jenis_pelanggan
-        $pelanggans = Pelanggan::with('jenis_pelanggan')->get();
+        // Get search query
+        $search = $request->input('search');
+
+        // Query builder with relationships
+        $query = Pelanggan::with(['tarif.jenis_pelanggan']);
+
+        // Apply search filter if search query exists
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('no_kontrol', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('telepon', 'like', "%{$search}%");
+            });
+        }
+
+        // Get paginated results
+        $pelanggans = $query->latest()
+            ->paginate(10)
+            ->withQueryString(); // Preserve other query parameters
+
+        // Return view with data
         return view('admin.kartuPelanggan.index', compact('pelanggans'));
     }
 

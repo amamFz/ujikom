@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Pagination Styling */
+.pagination {
+  @apply flex justify-center mt-4;
+}
+
+.pagination > div {
+  @apply inline-flex rounded-md shadow-sm;
+}
+
+.pagination span,
+.pagination a {
+  @apply px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300;
+}
+
+.pagination span.active {
+  @apply z-10 bg-blue-50 border-blue-500 text-blue-600;
+}
+
+.pagination a:hover {
+  @apply bg-gray-50;
+}
+
+.pagination span:first-child,
+.pagination a:first-child {
+  @apply rounded-l-md;
+}
+
+.pagination span:last-child,
+.pagination a:last-child {
+  @apply rounded-r-md;
+}
