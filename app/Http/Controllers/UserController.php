@@ -8,9 +8,18 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     // fungsi ini digunakan untuk menampilkan halaman utama
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $search = $request->input('search');
+
+        $users = User::when($search, function ($query) use ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('role', 'like', "%{$search}%");
+        })
+            ->latest()
+            ->paginate(10);
+
         return view('admin.petugasLoket.index', compact('users'));
     }
 

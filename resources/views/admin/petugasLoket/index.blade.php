@@ -1,57 +1,77 @@
 <x-app-layout>
   <x-slot name="header">
-    <h2 class="text-xl font-semibold leading-tight text-gray-800">
-      {{ __('Account') }}
-    </h2>
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold leading-tight text-gray-800">
+        {{ __('Account') }}
+      </h2>
+      <a href="{{ route('users.create') }}"
+        class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:bg-blue-900">
+        <i class="fas fa-plus mr-2"></i>
+        Tambah Account
+      </a>
+    </div>
   </x-slot>
 
   <div class="py-12">
     <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-900">
-          <div class="mb-6 flex items-center justify-between">
-            <h3 class="text-xl font-semibold leading-tight text-gray-600">Daftar Account</h3>
-            <a href="{{ route('users.create') }}"
-              class="rounded-lg bg-blue-500 px-3 py-2 text-white transition hover:bg-blue-600">
-              Tambah Account
-            </a>
+          <!-- Search Section -->
+          <div class="mb-6">
+            <form action="{{ route('users.index') }}" method="GET">
+              <div class="flex gap-4">
+                <div class="flex-1">
+                  <div class="relative">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                      class="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Cari berdasarkan username, email, atau role...">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit"
+                  class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                  Cari
+                </button>
+              </div>
+            </form>
           </div>
 
-          <div class="overflow-x-auto">
+          <!-- Table Section -->
+          <div class="overflow-hidden overflow-x-auto rounded-lg bg-white shadow">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="px-12 py-3.5 text-left text-sm font-normal text-gray-500">
-                    No
-                  </th>
-                  <th scope="col" class="px-4 py-3.5 text-left text-sm font-normal text-gray-500">
-                    Username
-                  </th>
-                  <th scope="col" class="px-4 py-3.5 text-left text-sm font-normal text-gray-500">
-                    Email
-                  </th>
-                  <th scope="col" class="px-4 py-3.5 text-left text-sm font-normal text-gray-500">
-                    Role
-                  </th>
-                  <th scope="col" class="px-4 py-3.5 text-left text-sm font-normal text-gray-500">
-                    Aksi
-                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">No</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Username</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Role</th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
-                @foreach ($users as $user)
-                  <tr class="hover:bg-gray-100">
-                    <td class="whitespace-nowrap px-4 py-4 text-sm">
-                      {{ $loop->index + 1 }}
+                @forelse($users as $index => $user)
+                  <tr class="hover:bg-gray-50">
+                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                      {{ $index + $users->firstItem() }}
                     </td>
-                    <td class="whitespace-nowrap px-4 py-4 text-sm">
+                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                       {{ $user->name }}
                     </td>
-                    <td class="whitespace-nowrap px-4 py-4 text-sm">
+                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                       {{ $user->email }}
                     </td>
-                    <td class="whitespace-nowrap px-4 py-4 text-sm">
-                      {{ $user->role }}
+                    <td class="whitespace-nowrap px-6 py-4">
+                      <span
+                        class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800">
+                        {{ $user->role }}
+                      </span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-4 text-sm">
                       <a href="{{ route('users.show', $user->id) }}" class="text-blue-500 hover:underline">
@@ -70,10 +90,23 @@
                       </form>
                     </td>
                   </tr>
-                @endforeach
+                @empty
+                  <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                      Tidak ada data account
+                    </td>
+                  </tr>
+                @endforelse
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination -->
+          @if ($users->hasPages())
+            <div class="mt-4">
+              {{ $users->links() }}
+            </div>
+          @endif
         </div>
       </div>
     </div>
