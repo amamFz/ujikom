@@ -50,8 +50,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('tarif', TarifController::class);
         Route::resource('jenis_pelanggan', JenisPelangganController::class);
 
-        Route::get('pemakaian/all/pdf', [PemakaianController::class, 'allPemakaianPdf'])
-            ->name('pemakaian.all.pdf');
+        Route::get('/pemakaian/report/all', [PemakaianController::class, 'generateAllReport'])
+            ->name('pemakaian.report.all');
         Route::get('pemakaian/report/filter', [PemakaianController::class, 'generateReport'])
             ->name('pemakaian.report');
         Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])

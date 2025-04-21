@@ -239,48 +239,15 @@ class PemakaianController extends Controller
     /**
      * Generate PDF for all pemakaian
      */
-    public function allPemakaianPdf(Request $request)
+    public function generateAllReport()
     {
-        $query = Pemakaian::with(['pelanggan.jenis_pelanggan', 'pelanggan.tarif']);
+        // Ambil semua data pemakaian
+        $pemakaians = Pemakaian::with('pelanggan')->orderBy('tahun', 'desc')->orderBy('bulan', 'desc')->get();
 
-        // Get current year and month if not provided
-        $tahun = $request->get('tahun', date('Y'));
-        $bulan = $request->get('bulan', date('n'));
+        // Generate PDF menggunakan view
+        $pdf = Pdf::loadView('admin.pemakaian.report-all', compact('pemakaians'));
 
-        // Apply filters
-        $query->when($tahun, function ($q) use ($tahun) {
-            return $q->where('tahun', $tahun);
-        });
-
-        $query->when($bulan, function ($q) use ($bulan) {
-            return $q->where('bulan', $bulan);
-        });
-
-        $query->when($request->has('status'), function ($q) use ($request) {
-            return $q->where('is_status', $request->status);
-        });
-
-        $pemakaians = $query->get();
-
-        if ($pemakaians->isEmpty()) {
-            return back()->with('error', 'Tidak ada data pemakaian untuk periode yang dipilih');
-        }
-
-        $data = [
-            'pemakaians' => $pemakaians,
-            'tahun' => $tahun,
-            'bulan' => $bulan,
-            'status' => $request->get('status')
-        ];
-
-        $pdf = PDF::loadView('admin.pemakaian.allReport', $data);
-
-        $filename = sprintf(
-            'laporan-pemakaian-%s-%s.pdf',
-            $tahun,
-            str_pad($bulan, 2, '0', STR_PAD_LEFT)
-        );
-
-        return $pdf->stream($filename);
+        // Unduh file PDF
+        return $pdf->download('laporan-pemakaian-semua.pdf');
     }
 }

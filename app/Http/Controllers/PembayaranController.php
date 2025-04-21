@@ -59,25 +59,36 @@ class PembayaranController extends Controller
     // fungsi ini digunakan untuk menampilkan halaman pencarian
     public function search(Request $request)
     {
-        Log::info('Request data:', $request->all());
-
         if (!$request->has('no_kontrol')) {
             return view('admin.pembayaran.search');
         }
 
-        $request->validate([
-            'no_kontrol' => 'required|exists:pelanggans,no_kontrol',
-        ]);
+        $query = Pemakaian::query()
+            ->where('no_kontrol_id', $request->no_kontrol);
 
-        $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
-        $pemakaian = Pemakaian::where('no_kontrol_id', $request->no_kontrol)
+        // Filter berdasarkan tahun jika ada
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
+        }
+
+        // Filter berdasarkan bulan jika ada
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->bulan);
+        }
+
+        $pemakaian = $query
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->first();
 
+        $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
+
+        if (!$pelanggan) {
+            return back()->withErrors(['no_kontrol' => 'Nomor kontrol tidak ditemukan']);
+        }
+
         return view('admin.pembayaran.entry', compact('pelanggan', 'pemakaian'));
     }
-
     // fungsi ini digunakan untuk menampilkan halaman entry pembayaran
     public function entry(Request $request)
     {
