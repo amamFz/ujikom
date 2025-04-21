@@ -13,12 +13,66 @@ class PemakaianController extends Controller
      * Display a listing of the resource.
      */
     // fungsi ini digunakan untuk menampilkan semua data pemakaian
-    public function index()
+    public function index(Request $request)
     {
-        $pemakaians = pemakaian::with('pelanggan')->get();
+        $query = Pemakaian::with(['pelanggan.tarif'])
+            ->when($request->tahun, function ($q) use ($request) {
+                return $q->where('tahun', $request->tahun);
+            })
+            ->when($request->bulan, function ($q) use ($request) {
+                return $q->where('bulan', $request->bulan);
+            })
+            ->when($request->status !== null, function ($q) use ($request) {
+                return $q->where('is_status', $request->status);
+            });
+
+        $pemakaians = $query->latest()->paginate(10);
+
         return view('admin.pemakaian.index', compact('pemakaians'));
     }
 
+    public function generateReport(Request $request)
+    {
+        $request->validate([
+            'tahun' => 'required|integer|min:2020|max:' . date('Y'),
+            'bulan' => 'required|integer|min:1|max:12',
+            'status' => 'nullable|in:0,1'
+        ]);
+
+        $query = Pemakaian::with(['pelanggan.jenis_pelanggan', 'pelanggan.tarif'])
+            ->when($request->tahun, function ($q) use ($request) {
+                return $q->where('tahun', $request->tahun);
+            })
+            ->when($request->bulan, function ($q) use ($request) {
+                return $q->where('bulan', $request->bulan);
+            })
+            ->when($request->status !== null, function ($q) use ($request) {
+                return $q->where('is_status', $request->status);
+            });
+
+        $pemakaians = $query->get();
+
+        if ($pemakaians->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pemakaian untuk periode yang dipilih');
+        }
+
+        $data = [
+            'pemakaians' => $pemakaians,
+            'tahun' => $request->tahun,
+            'bulan' => $request->bulan,
+            'status' => $request->status
+        ];
+
+        $pdf = PDF::loadView('admin.pemakaian.filterReport', $data);
+
+        $filename = sprintf(
+            'laporan-pemakaian-%s-%s.pdf',
+            $request->tahun,
+            str_pad($request->bulan, 2, '0', STR_PAD_LEFT)
+        );
+
+        return $pdf->stream($filename);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -161,17 +215,72 @@ class PemakaianController extends Controller
      */
     public function pemakaianPdf($id)
     {
-        // Ambil satu data pemakaian spesifik berdasarkan ID
-        $pemakaian = Pemakaian::with('pelanggan')->findOrFail($id);
+        $pemakaian = Pemakaian::with(['pelanggan.jenis_pelanggan', 'pelanggan.tarif'])
+            ->findOrFail($id);
 
-        // Buat collection dengan satu data saja
-        $pemakaians = collect([$pemakaian]);
+        $data = [
+            'pemakaians' => collect([$pemakaian]),
+            'tahun' => $pemakaian->tahun,
+            'bulan' => $pemakaian->bulan,
+            'summary' => [
+                'total_pemakaian' => $pemakaian->jumlah_pakai,
+                'total_biaya_beban' => $pemakaian->biaya_beban_pemakai,
+                'total_biaya_pemakaian' => $pemakaian->biaya_pemakaian,
+                'total_bayar' => $pemakaian->total_bayar,
+            ],
+            'single' => true,
+        ];
 
-        $pdf = Pdf::loadView('admin.pemakaian.report', [
-            'pemakaians' => $pemakaians,
-            'single' => true // Tambah flag untuk menandai ini single data
-        ]);
+        $pdf = PDF::loadView('admin.pemakaian.report', $data);
 
         return $pdf->stream("pemakaian-{$id}.pdf");
+    }
+
+    /**
+     * Generate PDF for all pemakaian
+     */
+    public function allPemakaianPdf(Request $request)
+    {
+        $query = Pemakaian::with(['pelanggan.jenis_pelanggan', 'pelanggan.tarif']);
+
+        // Get current year and month if not provided
+        $tahun = $request->get('tahun', date('Y'));
+        $bulan = $request->get('bulan', date('n'));
+
+        // Apply filters
+        $query->when($tahun, function ($q) use ($tahun) {
+            return $q->where('tahun', $tahun);
+        });
+
+        $query->when($bulan, function ($q) use ($bulan) {
+            return $q->where('bulan', $bulan);
+        });
+
+        $query->when($request->has('status'), function ($q) use ($request) {
+            return $q->where('is_status', $request->status);
+        });
+
+        $pemakaians = $query->get();
+
+        if ($pemakaians->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pemakaian untuk periode yang dipilih');
+        }
+
+        $data = [
+            'pemakaians' => $pemakaians,
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'status' => $request->get('status')
+        ];
+
+        $pdf = PDF::loadView('admin.pemakaian.allReport', $data);
+
+        $filename = sprintf(
+            'laporan-pemakaian-%s-%s.pdf',
+            $tahun,
+            str_pad($bulan, 2, '0', STR_PAD_LEFT)
+        );
+
+        return $pdf->stream($filename);
     }
 }
