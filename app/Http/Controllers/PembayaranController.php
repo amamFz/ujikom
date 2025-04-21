@@ -56,30 +56,12 @@ class PembayaranController extends Controller
         return view('admin.pembayaran.history', compact('pelanggan', 'pemakaians'));
     }
 
-    // fungsi ini digunakan untuk menampilkan halaman pencarian
+    // fungsi ini digunakan untuk menampilkan halaman pencarian entry pembayaran
     public function search(Request $request)
     {
         if (!$request->has('no_kontrol')) {
             return view('admin.pembayaran.search');
         }
-
-        $query = Pemakaian::query()
-            ->where('no_kontrol_id', $request->no_kontrol);
-
-        // Filter berdasarkan tahun jika ada
-        if ($request->filled('tahun')) {
-            $query->where('tahun', $request->tahun);
-        }
-
-        // Filter berdasarkan bulan jika ada
-        if ($request->filled('bulan')) {
-            $query->where('bulan', $request->bulan);
-        }
-
-        $pemakaian = $query
-            ->orderBy('tahun', 'desc')
-            ->orderBy('bulan', 'desc')
-            ->first();
 
         $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
 
@@ -87,54 +69,123 @@ class PembayaranController extends Controller
             return back()->withErrors(['no_kontrol' => 'Nomor kontrol tidak ditemukan']);
         }
 
-        return view('admin.pembayaran.entry', compact('pelanggan', 'pemakaian'));
+        // Ambil pemakaian yang akan dibayar
+        $currentPemakaian = Pemakaian::query()
+            ->where('no_kontrol_id', $request->no_kontrol)
+            ->when($request->filled('tahun'), function ($q) use ($request) {
+                $q->where('tahun', $request->tahun);
+            })
+            ->when($request->filled('bulan'), function ($q) use ($request) {
+                $q->where('bulan', $request->bulan);
+            })
+            ->first();
+
+        if (!$currentPemakaian) {
+            return back()->with('error', 'Data pemakaian tidak ditemukan');
+        }
+
+        // Ambil semua tagihan yang belum dibayar sebelum bulan ini
+        $unpaidBills = Pemakaian::where('no_kontrol_id', $request->no_kontrol)
+            ->where('is_status', false)
+            ->where(function ($query) use ($currentPemakaian) {
+                $query->where('tahun', '<', $currentPemakaian->tahun)
+                    ->orWhere(function ($q) use ($currentPemakaian) {
+                        $q->where('tahun', $currentPemakaian->tahun)
+                            ->where('bulan', '<', $currentPemakaian->bulan);
+                    });
+            })
+            ->orderBy('tahun')
+            ->orderBy('bulan')
+            ->get();
+
+        // Hitung total tagihan
+        $totalUnpaid = $unpaidBills->sum('total_bayar');
+        $currentBill = $currentPemakaian->total_bayar;
+        $grandTotal = $totalUnpaid + $currentBill;
+
+        return view('admin.pembayaran.entry', compact(
+            'pelanggan',
+            'currentPemakaian',
+            'unpaidBills',
+            'totalUnpaid',
+            'currentBill',
+            'grandTotal'
+        ));
     }
-    // fungsi ini digunakan untuk menampilkan halaman entry pembayaran
+
+    // fungsi ini digunakan untuk menyimpan data entry pembayaran
     public function entry(Request $request)
     {
         $request->validate([
             'no_kontrol' => 'required|exists:pelanggans,no_kontrol',
+            'pemakaian_ids' => 'required|array',
+            'pemakaian_ids.*' => 'exists:pemakaians,id'
         ]);
 
-        $pemakaian = Pemakaian::where('no_kontrol_id', $request->no_kontrol)
-            ->where('tahun', $request->tahun)
-            ->where('bulan', $request->bulan)
-            ->first();
+        // Update status semua tagihan yang dibayar
+        Pemakaian::whereIn('id', $request->pemakaian_ids)
+            ->update(['is_status' => true]);
 
-        if (!$pemakaian) {
-            return back()->with('error', 'Data pemakaian tidak ditemukan');
-        }
+        // Ambil pemakaian terakhir untuk struk
+        $lastPemakaian = Pemakaian::find($request->pemakaian_ids[count($request->pemakaian_ids) - 1]);
 
-        $pemakaian->update([
-            'is_status' => true,
+        // Redirect to receipt dengan data tambahan
+        return redirect()->route('pembayaran.receipt', [
+            'pemakaian' => $lastPemakaian->id,
+            'paid_bills' => implode(',', $request->pemakaian_ids)
         ]);
-
-        // Redirect to receipt
-        return redirect()->route('pembayaran.receipt', $pemakaian->id);
     }
 
-    // fungsi ini digunakan untuk menampilkan halaman entry pembayaran
-    public function generateReceipt(Pemakaian $pemakaian)
+    // fungsi ini digunakan untuk generate struk pembayaran
+    public function generateReceipt(Pemakaian $pemakaian, Request $request)
     {
         $pelanggan = $pemakaian->pelanggan;
+
+        // Ambil tagihan saat ini
+        $currentPayment = $pemakaian;
+
+        // Ambil semua tagihan yang dibayar (tunggakan)
+        $paidBills = Pemakaian::whereIn('id', explode(',', $request->paid_bills))
+            ->where('id', '!=', $pemakaian->id) // Exclude current payment
+            ->orderBy('tahun')
+            ->orderBy('bulan')
+            ->get();
+
+        // Hitung total keseluruhan
+        $totalPembayaran = $currentPayment->total_bayar + $paidBills->sum('total_bayar');
 
         $data = [
             'no_kontrol' => $pelanggan->no_kontrol,
             'nama_pelanggan' => $pelanggan->name,
             'alamat' => $pelanggan->alamat,
-            'tahun' => $pemakaian->tahun,
-            'bulan' => date('F', mktime(0, 0, 0, $pemakaian->bulan, 1)),
-            'meter_awal' => $pemakaian->meter_awal,
-            'meter_akhir' => $pemakaian->meter_akhir,
-            'jumlah_pakai' => $pemakaian->jumlah_pakai,
-            'biaya_beban' => number_format($pemakaian->biaya_beban_pemakai, 0, ',', '.'),
-            'biaya_pemakaian' => number_format($pemakaian->biaya_pemakaian, 0, ',', '.'),
-            'total_bayar' => number_format($pemakaian->total_bayar, 0, ',', '.'),
-            'status_pembayaran' => $pemakaian->is_status ? 'LUNAS' : 'BELUM LUNAS',
+            'current_payment' => [
+                'tahun' => $currentPayment->tahun,
+                'bulan' => date('F', mktime(0, 0, 0, $currentPayment->bulan, 1)),
+                'meter_awal' => $currentPayment->meter_awal,
+                'meter_akhir' => $currentPayment->meter_akhir,
+                'jumlah_pakai' => $currentPayment->jumlah_pakai,
+                'biaya_beban' => number_format($currentPayment->biaya_beban_pemakai, 0, ',', '.'),
+                'biaya_pemakaian' => number_format($currentPayment->biaya_pemakaian, 0, ',', '.'),
+                'total_bayar' => number_format($currentPayment->total_bayar, 0, ',', '.')
+            ],
+            'previous_bills' => $paidBills->map(function ($bill) {
+                return [
+                    'periode' => date('F Y', mktime(0, 0, 0, $bill->bulan, 1, $bill->tahun)),
+                    'jumlah_pakai' => $bill->jumlah_pakai,
+                    'biaya_beban' => number_format($bill->biaya_beban_pemakai, 0, ',', '.'),
+                    'biaya_pemakaian' => number_format($bill->biaya_pemakaian, 0, ',', '.'),
+                    'total' => number_format($bill->total_bayar, 0, ',', '.')
+                ];
+            })->toArray(),
+            'total_pembayaran' => number_format($totalPembayaran, 0, ',', '.'),
             'tanggal_bayar' => now()->format('d/m/Y H:i'),
+            // 'petugas' => auth()->user()->name,
         ];
 
-        $pdf = PDF::loadView('admin.pembayaran.receipt', $data);
+        // Load view dengan data yang telah disiapkan
+        $pdf = PDF::loadView('admin.pembayaran.receipt', $data)
+            ->setPaper('A4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif']);
 
         return $pdf->download('struk_pembayaran_' . $pelanggan->no_kontrol . '.pdf');
     }
