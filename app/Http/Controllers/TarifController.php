@@ -12,10 +12,20 @@ class TarifController extends Controller
      * Display a listing of the resource.
      */
     // fungsi ini digunakan untuk menampilkan semua data tarif
-    public function index()
+    public function index(Request $request)
     {
-        $tarifs = Tarif::with('jenis_pelanggan')->get();
-        return view("admin.tarif.index", compact("tarifs"));
+        $search = $request->input('search');
+
+        $tarifs = Tarif::with('jenis_pelanggan')
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('jenis_pelanggan', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.tarif.index', compact('tarifs'));
     }
 
     /**
