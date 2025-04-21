@@ -10,10 +10,17 @@ class JenisPelangganController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $pelanggans = JenisPelanggan::all();
-        return view("admin.jenisPelanggan.index", compact("pelanggans"));
+        $search = $request->input('search');
+
+        $pelanggans = JenisPelanggan::when($search, function ($query) use ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.jenisPelanggan.index', compact('pelanggans'));
     }
 
     /**
