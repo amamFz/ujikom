@@ -45,12 +45,12 @@
                     </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pembayaran.search')" :active="request()->routeIs('pembayaran.search')">
-                            {{ __('Entry Pemabayaran') }}
+                            {{ __('Pembayaran') }}
                         </x-nav-link>
                     </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pembayaran.search.history')" :active="request()->routeIs('pembayaran.search.history')">
-                            {{ __('History') }}
+                            {{ __('Riwayat') }}
                         </x-nav-link>
                     </div>
                 @elseif (Auth::user()->role == 'petugas')
@@ -72,12 +72,12 @@
                     </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pembayaran.search')" :active="request()->routeIs('pembayaran.search')">
-                            {{ __('Entry Pemabayaran') }}
+                            {{ __('Pembayaran') }}
                         </x-nav-link>
                     </div>
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pembayaran.search.history')" :active="request()->routeIs('pembayaran.search.history')">
-                            {{ __('History') }}
+                            {{ __('Riwayat') }}
                         </x-nav-link>
                     </div>
                 @endif
