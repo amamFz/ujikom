@@ -54,6 +54,16 @@
                         </x-nav-link>
                     </div>
                 @elseif (Auth::user()->role == 'petugas')
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        {{ __('Dashboard') }}
+                    </x-nav-link>
+                </div>
+                    <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                        <x-nav-link :href="route('pemakaian.index')" :active="request()->routeIs('pemakaian.index')">
+                            {{ __('Pemakaian') }}
+                        </x-nav-link>
+                    </div>
                     <!-- User Navigation Links -->
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.index')">

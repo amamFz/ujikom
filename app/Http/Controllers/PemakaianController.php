@@ -6,6 +6,7 @@ use App\Models\Pelanggan;
 use App\Models\pemakaian;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PemakaianController extends Controller
 {
@@ -79,50 +80,50 @@ class PemakaianController extends Controller
 
     // fungsi ini digunakan untuk menampilkan form tambah pemakaian
     public function create(Request $request)
-{
-    $pelanggans = Pelanggan::all();
-    $tahun = $request->tahun ?? date('Y');
-    $bulan = $request->bulan ?? date('n');
-    $no_kontrol_id = $request->no_kontrol_id;
-    $meter_awal = null;
-    $biaya_beban_pemakai = null;
+    {
+        $pelanggans = Pelanggan::all();
+        $tahun = $request->tahun ?? date('Y');
+        $bulan = $request->bulan ?? date('n');
+        $no_kontrol_id = $request->no_kontrol_id;
+        $meter_awal = null;
+        $biaya_beban_pemakai = null;
 
-    if ($no_kontrol_id) {
-        // Ambil data pelanggan beserta tarifnya
-        $pelanggan = Pelanggan::with('tarif')
-            ->where('no_kontrol', $no_kontrol_id)
-            ->first();
-
-        // Set biaya beban dari tarif pelanggan
-        if ($pelanggan && $pelanggan->tarif) {
-            $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban;
-        }
-
-        // Cari data meter akhir sebelumnya
-        if ($tahun && $bulan) {
-            $prevMonth = $bulan == 1 ? 12 : $bulan - 1;
-            $prevYear = $bulan == 1 ? $tahun - 1 : $tahun;
-
-            $lastReading = Pemakaian::where('no_kontrol_id', $no_kontrol_id)
-                ->where('tahun', $prevYear)
-                ->where('bulan', $prevMonth)
+        if ($no_kontrol_id) {
+            // Ambil data pelanggan beserta tarifnya
+            $pelanggan = Pelanggan::with('tarif')
+                ->where('no_kontrol', $no_kontrol_id)
                 ->first();
 
-            if ($lastReading) {
-                $meter_awal = $lastReading->meter_akhir;
+            // Set biaya beban dari tarif pelanggan
+            if ($pelanggan && $pelanggan->tarif) {
+                $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban;
+            }
+
+            // Cari data meter akhir sebelumnya
+            if ($tahun && $bulan) {
+                $prevMonth = $bulan == 1 ? 12 : $bulan - 1;
+                $prevYear = $bulan == 1 ? $tahun - 1 : $tahun;
+
+                $lastReading = Pemakaian::where('no_kontrol_id', $no_kontrol_id)
+                    ->where('tahun', $prevYear)
+                    ->where('bulan', $prevMonth)
+                    ->first();
+
+                if ($lastReading) {
+                    $meter_awal = $lastReading->meter_akhir;
+                }
             }
         }
-    }
 
-    return view('admin.pemakaian.create', compact(
-        'pelanggans',
-        'tahun',
-        'bulan',
-        'no_kontrol_id',
-        'meter_awal',
-        'biaya_beban_pemakai'
-    ));
-}
+        return view('admin.pemakaian.create', compact(
+            'pelanggans',
+            'tahun',
+            'bulan',
+            'no_kontrol_id',
+            'meter_awal',
+            'biaya_beban_pemakai'
+        ));
+    }
 
     public function getLastMeterAkhir(Request $request)
     {
@@ -249,44 +250,115 @@ class PemakaianController extends Controller
      */
 
     //  fungsi ini digunakan untuk memperbarui data pemakaian
-    public function update(Request $request, pemakaian $pemakaian)
+    public function update(Request $request, Pemakaian $pemakaian)
     {
+        // 1. Validasi request
         $request->validate([
             'tahun' => 'required|integer',
             'bulan' => 'required|integer|between:1,12',
             'no_kontrol_id' => 'required|exists:pelanggans,no_kontrol',
-            'meter_awal' => 'required|integer|min:0',
-            'meter_akhir' => 'required|integer|gte:meter_awal',
-            'is_status' => 'required|boolean',
+            'meter_akhir' => 'required|integer|min:0',
         ]);
 
-        // Find pelanggan with tarif
+        // 2. Check if this is first reading for the customer
+        $isFirstReading = !Pemakaian::where('no_kontrol_id', $pemakaian->no_kontrol_id)
+            ->where(function ($query) use ($pemakaian) {
+                $query->where('tahun', '<', $pemakaian->tahun)
+                    ->orWhere(function ($q) use ($pemakaian) {
+                        $q->where('tahun', '=', $pemakaian->tahun)
+                            ->where('bulan', '<', $pemakaian->bulan);
+                    });
+            })
+            ->exists();
+
+        // 3. Set meter_awal based on whether this is first reading
+        if ($isFirstReading) {
+            $meter_awal = $pemakaian->meter_awal; // Keep original meter_awal
+        } else {
+            // Get previous month's reading
+            $prevMonth = $pemakaian->bulan == 1 ? 12 : $pemakaian->bulan - 1;
+            $prevYear = $pemakaian->bulan == 1 ? $pemakaian->tahun - 1 : $pemakaian->tahun;
+
+            $lastReading = Pemakaian::where('no_kontrol_id', $pemakaian->no_kontrol_id)
+                ->where('tahun', $prevYear)
+                ->where('bulan', $prevMonth)
+                ->first();
+
+            $meter_awal = $lastReading ? $lastReading->meter_akhir : $pemakaian->meter_awal;
+        }
+
+        // 4. Validate meter_akhir
+        if ($request->meter_akhir <= $meter_awal) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['meter_akhir' => "Meter akhir ($request->meter_akhir) harus lebih besar dari meter awal ($meter_awal)"]);
+        }
+
+        // 5. Check next month's reading
+        $nextMonth = $pemakaian->bulan == 12 ? 1 : $pemakaian->bulan + 1;
+        $nextYear = $pemakaian->bulan == 12 ? $pemakaian->tahun + 1 : $pemakaian->tahun;
+
+        $nextReading = Pemakaian::where('no_kontrol_id', $pemakaian->no_kontrol_id)
+            ->where('tahun', $nextYear)
+            ->where('bulan', $nextMonth)
+            ->first();
+
+        if ($nextReading && $request->meter_akhir >= $nextReading->meter_akhir) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['meter_akhir' => "Meter akhir ($request->meter_akhir) tidak boleh lebih besar atau sama dengan meter akhir bulan berikutnya ({$nextReading->meter_akhir})"]);
+        }
+
+        // 6. Calculate costs
         $pelanggan = Pelanggan::with('tarif')
-            ->where('no_kontrol', $request->no_kontrol_id)
+            ->where('no_kontrol', $pemakaian->no_kontrol_id)
             ->firstOrFail();
 
-        // Calculate jumlah_pakai
-        $jumlah_pakai = $request->meter_akhir - $request->meter_awal;
-
-        // Calculate biaya
+        $jumlah_pakai = $request->meter_akhir - $meter_awal;
         $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban ?? 0;
         $biaya_pemakaian = $jumlah_pakai * $pelanggan->tarif->tarif_kwh;
 
+        // 7. Update record
         $pemakaian->update([
-            'tahun' => $request->tahun,
-            'bulan' => $request->bulan,
-            'no_kontrol_id' => $request->no_kontrol_id,
-            'meter_awal' => $request->meter_awal,
+            'meter_awal' => $meter_awal,
             'meter_akhir' => $request->meter_akhir,
             'jumlah_pakai' => $jumlah_pakai,
             'biaya_beban_pemakai' => $biaya_beban_pemakai,
             'biaya_pemakaian' => $biaya_pemakaian,
-            'is_status' => $request->is_status
         ]);
+
+        // 8. Update meter_awal untuk bulan-bulan berikutnya
+        $nextReadings = Pemakaian::where('no_kontrol_id', $pemakaian->no_kontrol_id)
+            ->where(function ($query) use ($pemakaian) {
+                $query->where('tahun', '>', $pemakaian->tahun)
+                    ->orWhere(function ($q) use ($pemakaian) {
+                        $q->where('tahun', '=', $pemakaian->tahun)
+                            ->where('bulan', '>', $pemakaian->bulan);
+                    });
+            })
+            ->orderBy('tahun')
+            ->orderBy('bulan')
+            ->get();
+
+        // Update secara berurutan untuk menjaga konsistensi data
+        $previousMeterAkhir = $request->meter_akhir;
+
+        foreach ($nextReadings as $reading) {
+            $newJumlahPakai = $reading->meter_akhir - $previousMeterAkhir;
+
+            $reading->update([
+                'meter_awal' => $previousMeterAkhir,
+                'jumlah_pakai' => $newJumlahPakai,
+                'biaya_pemakaian' => $newJumlahPakai * $pelanggan->tarif->tarif_kwh
+            ]);
+
+            $previousMeterAkhir = $reading->meter_akhir;
+        }
 
         return redirect()->route('pemakaian.index')
             ->with('success', 'Data pemakaian berhasil diperbarui');
     }
+
 
     /**
      * Remove the specified resource from storage.

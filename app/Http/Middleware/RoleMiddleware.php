@@ -16,10 +16,18 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        if (Auth::check() && Auth::user()->role == $role) {
+        if (!Auth::check()) {
+            return redirect('/');
+        }
+
+        // Split role parameter by pipe and convert to array
+        $roles = explode('|', $role);
+
+        // Check if user has any of the required roles
+        if (in_array(Auth::user()->role, $roles)) {
             return $next($request);
         }
 
-        return redirect('/'); 
+        return redirect('/')->with('error', 'Unauthorized access');
     }
 }

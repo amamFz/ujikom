@@ -17,20 +17,23 @@ class PembayaranController extends Controller
         if ($request->has('no_kontrol')) {
             $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
 
-            if ($pelanggan) {
-                $pemakaians = Pemakaian::where('no_kontrol_id', $pelanggan->no_kontrol)
-                    ->orderBy('tahun', 'desc')
-                    ->orderBy('bulan', 'desc')
-                    ->get();
-
-                return view('home', compact('pelanggan', 'pemakaians'));
-            }
-
             if (!$pelanggan) {
-                return back()->with('error', 'Nomor kontrol tidak ditemukan');
+                return view('home')->with('error', 'Nomor kontrol tidak ditemukan.');
             }
 
-            return back()->with('error', 'Nomor kontrol tidak ditemukan');
+            $pemakaians = Pemakaian::where('no_kontrol_id', $pelanggan->no_kontrol)
+                ->orderBy('tahun', 'desc')
+                ->orderBy('bulan', 'desc')
+                ->get();
+
+            if ($pemakaians->isEmpty()) {
+                return view('home', [
+                    'pelanggan' => $pelanggan,
+                    'warning' => 'Belum ada data pemakaian untuk pelanggan ini.'
+                ]);
+            }
+
+            return view('home', compact('pelanggan', 'pemakaians'));
         }
 
         return view('home');
@@ -45,13 +48,27 @@ class PembayaranController extends Controller
 
         $request->validate([
             'no_kontrol' => 'required|exists:pelanggans,no_kontrol',
+        ], [
+            'no_kontrol.required' => 'Nomor kontrol harus diisi',
+            'no_kontrol.exists' => 'Nomor kontrol tidak ditemukan'
         ]);
 
         $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
+
+        if (!$pelanggan) {
+            return back()->withErrors(['no_kontrol' => 'Data pelanggan tidak ditemukan'])->withInput();
+        }
+
         $pemakaians = Pemakaian::where('no_kontrol_id', $request->no_kontrol)
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->get();
+
+        if ($pemakaians->isEmpty()) {
+            return view('admin.pembayaran.search-history')
+                ->with('warning', 'Belum ada data pemakaian untuk pelanggan ini')
+                ->with('input', $request->all());
+        }
 
         return view('admin.pembayaran.history', compact('pelanggan', 'pemakaians'));
     }
@@ -63,28 +80,37 @@ class PembayaranController extends Controller
             return view('admin.pembayaran.search');
         }
 
+        // Validate no_kontrol first
         $pelanggan = Pelanggan::where('no_kontrol', $request->no_kontrol)->first();
-
         if (!$pelanggan) {
-            return back()->withErrors(['no_kontrol' => 'Nomor kontrol tidak ditemukan']);
+            return back()->withErrors(['no_kontrol' => 'Nomor kontrol tidak ditemukan'])->withInput();
         }
 
-        // Ambil pemakaian yang akan dibayar
-        $currentPemakaian = Pemakaian::query()
-            ->where('no_kontrol_id', $request->no_kontrol)
-            ->when($request->filled('tahun'), function ($q) use ($request) {
-                $q->where('tahun', $request->tahun);
-            })
-            ->when($request->filled('bulan'), function ($q) use ($request) {
-                $q->where('bulan', $request->bulan);
-            })
-            ->first();
+        // Build query
+        $query = Pemakaian::query()
+            ->where('no_kontrol_id', $request->no_kontrol);
 
+        // Add year and month filters if provided
+        if ($request->filled('tahun') && $request->filled('bulan')) {
+            $query->where('tahun', $request->tahun)
+                  ->where('bulan', $request->bulan);
+        }
+
+        // Get the pemakaian data
+        $currentPemakaian = $query->first();
+
+        // Check if data exists for the specified period
         if (!$currentPemakaian) {
-            return back()->with('error', 'Data pemakaian tidak ditemukan');
+            $errorMessage = $request->filled('tahun') && $request->filled('bulan')
+                ? "Data pemakaian untuk periode " . date('F Y', mktime(0, 0, 0, $request->bulan, 1, $request->tahun)) . " tidak ditemukan"
+                : "Data pemakaian tidak ditemukan";
+
+            return back()
+                ->withErrors(['period' => $errorMessage])
+                ->withInput();
         }
 
-        // Ambil semua tagihan yang belum dibayar sebelum bulan ini
+        // Get unpaid bills before current period
         $unpaidBills = Pemakaian::where('no_kontrol_id', $request->no_kontrol)
             ->where('is_status', false)
             ->where(function ($query) use ($currentPemakaian) {
@@ -98,7 +124,7 @@ class PembayaranController extends Controller
             ->orderBy('bulan')
             ->get();
 
-        // Hitung total tagihan
+        // Calculate totals
         $totalUnpaid = $unpaidBills->sum('total_bayar');
         $currentBill = $currentPemakaian->total_bayar;
         $grandTotal = $totalUnpaid + $currentBill;

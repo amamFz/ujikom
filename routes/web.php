@@ -43,24 +43,34 @@ Route::middleware('auth')->group(function () {
             ->name('pembayaran.search.history');
     });
 
-    Route::middleware('role:admin')->group(function () {
-        // Full access to all resources
-        Route::resource('pemakaian', PemakaianController::class);
-        Route::get('/pemakaian/last-meter', [PemakaianController::class, 'getLastMeterAkhir'])
-        ->name('pemakaian.last-meter');
-          Route::resource('users', UserController::class);
-        Route::resource('tarif', TarifController::class);
-        Route::resource('jenis_pelanggan', JenisPelangganController::class);
+    // ✅ Petugas & Admin bisa lihat pemakaian (index) & report
+    Route::middleware('role:admin|petugas')->group(function () {
+        Route::get('/pemakaian', [PemakaianController::class, 'index'])->name('pemakaian.index');
 
+        // Report - Change {id} to {pemakaian} for consistency
         Route::get('/pemakaian/report/all', [PemakaianController::class, 'generateAllReport'])
             ->name('pemakaian.report.all');
-        Route::get('pemakaian/report/filter', [PemakaianController::class, 'generateReport'])
+        Route::get('/pemakaian/report/filter', [PemakaianController::class, 'generateReport'])
             ->name('pemakaian.report');
-        Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
-            ->name('pemakaian.report.pdf');
-        // Route::get('pemakaian/{id}/pdf', [PemakaianController::class, 'pemakaianPdf'])
-        //     ->name('pemakaian.report.pdf');
+        Route::get('/pemakaian/{pemakaian}/pdf', [PemakaianController::class, 'pemakaianPdf'])
+            ->name('pemakaian.report.pdf');  // Changed from {id} to {pemakaian}
+    });
+
+    // ✅ Hanya admin bisa CRUD pemakaian
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/pemakaian/create', [PemakaianController::class, 'create'])->name('pemakaian.create');
+        Route::post('/pemakaian', [PemakaianController::class, 'store'])->name('pemakaian.store');
+        Route::get('/pemakaian/{pemakaian}/edit', [PemakaianController::class, 'edit'])->name('pemakaian.edit');
+        Route::put('/pemakaian/{pemakaian}', [PemakaianController::class, 'update'])->name('pemakaian.update');
+        Route::delete('/pemakaian/{pemakaian}', [PemakaianController::class, 'destroy'])->name('pemakaian.destroy');
+        Route::get('/pemakaian/last-meter', [PemakaianController::class, 'getLastMeterAkhir'])->name('pemakaian.last-meter');
+        Route::get('/pemakaian/show/{pemakaian}', [PemakaianController::class, 'show'])->name('pemakaian.show');
+        Route::resource('users', UserController::class);
+        Route::resource('tarif', TarifController::class);
+        Route::resource('jenis_pelanggan', JenisPelangganController::class);
     });
 });
+
+
 
 require __DIR__ . '/auth.php';
