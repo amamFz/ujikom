@@ -46,7 +46,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         // Full access to all resources
         Route::resource('pemakaian', PemakaianController::class);
-        Route::resource('users', UserController::class);
+        Route::get('/pemakaian/last-meter', [PemakaianController::class, 'getLastMeterAkhir'])
+        ->name('pemakaian.last-meter');
+          Route::resource('users', UserController::class);
         Route::resource('tarif', TarifController::class);
         Route::resource('jenis_pelanggan', JenisPelangganController::class);
 

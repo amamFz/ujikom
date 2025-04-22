@@ -99,7 +99,7 @@
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div class="mb-4 flex w-full flex-col">
+                        {{-- <div class="mb-4 flex w-full flex-col">
                             <label for="is_status" class="mb-2 text-gray-600">No Kontrol Pelanggan</label>
                             <select name="is_status" id="is_status"
                                 class="@error('is_status') border-red-500 @enderror rounded-md" required>
@@ -116,7 +116,7 @@
                             @error('is_status')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
-                        </div>
+                        </div> --}}
 
                         <div class="flex items-center gap-2">
                             <button type="submit"

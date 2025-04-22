@@ -78,10 +78,72 @@ class PemakaianController extends Controller
      */
 
     // fungsi ini digunakan untuk menampilkan form tambah pemakaian
-    public function create()
+    public function create(Request $request)
+{
+    $pelanggans = Pelanggan::all();
+    $tahun = $request->tahun ?? date('Y');
+    $bulan = $request->bulan ?? date('n');
+    $no_kontrol_id = $request->no_kontrol_id;
+    $meter_awal = null;
+    $biaya_beban_pemakai = null;
+
+    if ($no_kontrol_id) {
+        // Ambil data pelanggan beserta tarifnya
+        $pelanggan = Pelanggan::with('tarif')
+            ->where('no_kontrol', $no_kontrol_id)
+            ->first();
+
+        // Set biaya beban dari tarif pelanggan
+        if ($pelanggan && $pelanggan->tarif) {
+            $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban;
+        }
+
+        // Cari data meter akhir sebelumnya
+        if ($tahun && $bulan) {
+            $prevMonth = $bulan == 1 ? 12 : $bulan - 1;
+            $prevYear = $bulan == 1 ? $tahun - 1 : $tahun;
+
+            $lastReading = Pemakaian::where('no_kontrol_id', $no_kontrol_id)
+                ->where('tahun', $prevYear)
+                ->where('bulan', $prevMonth)
+                ->first();
+
+            if ($lastReading) {
+                $meter_awal = $lastReading->meter_akhir;
+            }
+        }
+    }
+
+    return view('admin.pemakaian.create', compact(
+        'pelanggans',
+        'tahun',
+        'bulan',
+        'no_kontrol_id',
+        'meter_awal',
+        'biaya_beban_pemakai'
+    ));
+}
+
+    public function getLastMeterAkhir(Request $request)
     {
-        $pelanggans = Pelanggan::all();
-        return view('admin.pemakaian.create', compact('pelanggans'));
+        if (!$request->no_kontrol_id || !$request->tahun || !$request->bulan) {
+            return response()->json(['meter_akhir' => null]);
+        }
+
+        // Hitung bulan dan tahun sebelumnya
+        $prevMonth = $request->bulan == 1 ? 12 : $request->bulan - 1;
+        $prevYear = $request->bulan == 1 ? $request->tahun - 1 : $request->tahun;
+
+        // Cari data pemakaian terakhir untuk pelanggan tersebut di bulan sebelumnya
+        $lastReading = Pemakaian::where('no_kontrol_id', $request->no_kontrol_id)
+            ->where('tahun', $prevYear)
+            ->where('bulan', $prevMonth)
+            ->first();
+
+        return response()->json([
+            'meter_akhir' => $lastReading ? $lastReading->meter_akhir : null,
+            'is_first_entry' => !$lastReading
+        ]);
     }
 
     /**
@@ -91,43 +153,70 @@ class PemakaianController extends Controller
     //  fungsi ini digunakan untuk menyimpan data pemakaian baru
     public function store(Request $request)
     {
-        // Validasi input
-        $validated = $request->validate([
+        // Get last reading for this customer
+        $lastReading = Pemakaian::where('no_kontrol_id', $request->no_kontrol_id)
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->first();
+
+        // Different validation rules based on whether this is first entry or not
+        $validationRules = [
             'tahun' => 'required|integer',
             'bulan' => 'required|integer|between:1,12',
             'no_kontrol_id' => 'required|exists:pelanggans,no_kontrol',
-            'meter_awal' => 'required|integer|min:0',
-            'meter_akhir' => 'required|integer|gte:meter_awal',
-        ]);
+            'meter_akhir' => 'required|integer|min:0',
+        ];
 
-        // Find pelanggan with their tarif relationship
+        // Add meter_awal validation only if this is first entry
+        if (!$lastReading) {
+            $validationRules['meter_awal'] = 'required|integer|min:0';
+        }
+
+        $validated = $request->validate($validationRules);
+
+        // Check for duplicate entry
+        $exists = Pemakaian::where('no_kontrol_id', $validated['no_kontrol_id'])
+            ->where('tahun', $validated['tahun'])
+            ->where('bulan', $validated['bulan'])
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['duplicate' => 'Data pemakaian untuk pelanggan ini pada periode tersebut sudah ada']);
+        }
+
+        // Set meter_awal based on whether this is first entry or not
+        $meter_awal = $lastReading ? $lastReading->meter_akhir : $request->meter_awal;
+
+        if ($validated['meter_akhir'] <= $meter_awal) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['meter_akhir' => 'Meter akhir harus lebih besar dari meter awal (' . $meter_awal . ')']);
+        }
+
+        // Find pelanggan with tarif
         $pelanggan = Pelanggan::with('tarif')
             ->where('no_kontrol', $validated['no_kontrol_id'])
-            ->firstOrFail(); // This will automatically return 404 if not found
-        // dd($pelanggan->tarif);
+            ->firstOrFail();
 
-        // Calculate usage (pemakaian)
-        $jumlah_pakai = $request->meter_akhir - $request->meter_awal;
-        if ($jumlah_pakai < 0) {
-            return redirect()->back()->withErrors(['meter_akhir' => 'Meter akhir harus lebih besar dari meter awal']);
-        }
-        // Set the biaya beban and biaya pemakaian
+        // Calculate usage and costs
+        $jumlah_pakai = $validated['meter_akhir'] - $meter_awal;
         $biaya_beban_pemakai = $pelanggan->tarif->biaya_beban ?? 0;
         $biaya_pemakaian = $jumlah_pakai * $pelanggan->tarif->tarif_kwh;
 
         // Create new pemakaian record
-        pemakaian::create([
+        Pemakaian::create([
             'tahun' => $validated['tahun'],
             'bulan' => $validated['bulan'],
             'no_kontrol_id' => $pelanggan->no_kontrol,
-            'meter_awal' => $validated['meter_awal'],
+            'meter_awal' => $meter_awal,
             'meter_akhir' => $validated['meter_akhir'],
             'jumlah_pakai' => $jumlah_pakai,
             'biaya_beban_pemakai' => $biaya_beban_pemakai,
             'biaya_pemakaian' => $biaya_pemakaian,
         ]);
 
-        // Redirect with success message
         return redirect()->route('pemakaian.index')
             ->with('success', 'Data pemakaian berhasil ditambahkan');
     }
